@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Película</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <h1>MovieVerse</h1>
+        <h2>Agregar película personalizada</h2>
+
+        <form action="/add-movie" method="post">
+            <input type="text" name="title" placeholder="Título" required>
+
+            <textarea name="description" placeholder="Descripción" required></textarea>
+
+            <input type="text" name="poster" placeholder="URL del póster (opcional)">
+
+            <button type="submit">Guardar</button>
+        </form>
+
+        <p><a href="/dashboard">⬅ Volver al catálogo</a></p>
+    </div>
+</body>
+</html>

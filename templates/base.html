@@ -1,24 +1,32 @@
-<!DOCTYPE html>
+<!-- templates/base.html -->
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TMDB App</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}CineApp{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header>
-    <h1>🎬 TMDB App</h1>
+  <header class="site-header">
+    <h1><a href="/dashboard">CineApp</a></h1>
     <nav>
-      {% if session.get('user') %}
-        <a href="{{ url_for('dashboard') }}">Inicio</a>
-        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+      {% if request.session.get('user') %}
+        <span class="user">Hola, {{ request.session.get('user') }}</span>
+        <a href="/logout">Cerrar sesión</a>
       {% else %}
-        <a href="{{ url_for('login') }}">Iniciar sesión</a>
+        <a href="/login">Iniciar sesión</a>
+        <a href="/register">Registrarse</a>
       {% endif %}
     </nav>
   </header>
 
-  {% block content %}{% endblock %}
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <small>Proyecto - Repositorio</small>
+  </footer>
 </body>
 </html>

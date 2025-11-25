@@ -1,164 +1,196 @@
-/* 🌈 ESTILOS GENERALES */
-body {
+/* ============================
+   🌈 ESTILOS GENERALES
+   ============================ */
+   * {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+
+body {
     font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #000000, #000000);
+    background: linear-gradient(135deg, #000000, #0d0016);
     color: white;
 }
 
-/* 🔹 CONTENEDOR DE AUTENTICACIÓN */
+/* Contenedor global */
+.page-wrapper {
+    max-width: 1200px;
+    margin: auto;
+    padding: 2rem;
+}
+
+/* ============================
+   🔹 AUTENTICACIÓN
+   ============================ */
 .auth-container {
-    background: rgba(112, 0, 249, 0.418);
-    backdrop-filter: blur(10px);
+    background: rgba(112, 0, 249, 0.4);
+    backdrop-filter: blur(12px);
     padding: 40px;
-    border-radius: 20px;
-    width: 350px;
+    border-radius: 18px;
+    width: 360px;
     margin: 8% auto;
     text-align: center;
-    box-shadow: 0 0 20px rgba(174, 0, 255, 0.4);
-}
-
-.auth-container h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
-}
-
-.auth-container h2 {
-    font-size: 20px;
-    margin-bottom: 20px;
-    color: #ffcb05;
+    box-shadow: 0 0 30px rgba(174, 0, 255, 0.6);
 }
 
 .auth-container input {
     width: 85%;
     padding: 12px;
     margin: 10px 0;
-    border: none;
     border-radius: 10px;
-    outline: none;
-    font-size: 15px;
+    border: none;
+    background: #1b0030;
+    color: white;
 }
 
 .auth-container button {
     background-color: #ffcb05;
-    color: black;
-    border: none;
+    color: #000;
     padding: 12px 25px;
     border-radius: 10px;
+    border: none;
     cursor: pointer;
+    transition: 0.3s ease;
     font-weight: bold;
-    transition: all 0.3s ease;
 }
 
 .auth-container button:hover {
-    background-color: #ffd83b;
+    background: #ffd83b;
     transform: scale(1.05);
 }
 
-.auth-container a {
-    color: #ffcb05;
-    text-decoration: none;
-}
-
-.auth-container a:hover {
-    text-decoration: underline;
-}
-
-/* 🔸 MENSAJES FLASH */
-.flash {
-    padding: 10px;
+/* ============================
+   🎬 DASHBOARD
+   ============================ */
+h1 {
     margin-bottom: 10px;
-    border-radius: 10px;
-    font-weight: bold;
 }
 
-.flash.error {
-    background-color: #ff4c4c;
+.add-btn {
+    display: inline-block;
+    background: transparent;
+    border: 2px solid #a24dff;
+    padding: 8px 18px;
+    margin: 1rem 0;
+    border-radius: 999px;
     color: white;
-}
-
-.flash.success {
-    background-color: #4caf50;
-    color: white;
-}
-
-/* 🎬 DASHBOARD */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #010101;
-    padding: 20px;
-    color: white;
-}
-
-header h1 {
-    font-size: 22px;
-    margin: 0;
-}
-
-.logout {
-    color: #ffcb05;
     text-decoration: none;
     font-weight: bold;
+    transition: 0.3s ease;
 }
 
-.logout:hover {
-    text-decoration: underline;
+.add-btn:hover {
+    background: #a24dff;
+    box-shadow: 0 0 10px rgba(162, 77, 255, 0.8);
 }
 
-/* 🎞️ CUADRÍCULA DE PELÍCULAS */
+/* Buscador */
+.search-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.search-form input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 999px;
+    border: none;
+    background: #1b0030;
+    color: white;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    background: #ffcb05;
+    border-radius: 999px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background: #ffd83b;
+}
+
+/* ============================
+   🟣 GRID DE PELÍCULAS
+   ============================ */
 .movie-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 25px;
-    padding: 40px;
+    margin-top: 1rem;
     justify-items: center;
 }
 
+/* Tarjeta */
 .movie-card {
-    background: rgba(132, 0, 255, 0.676);
+    background: rgba(132, 0, 255, 0.65);
     padding: 15px;
-    border-radius: 15px;
+    width: 100%;
+    border-radius: 18px;
     text-align: center;
-    transition: transform 0.3s ease;
-    width: 200px;
+    transition: 0.3s ease;
+    box-shadow: 0 0 18px rgba(132, 0, 255, 0.4);
 }
 
 .movie-card:hover {
-    transform: scale(1.05);
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(132, 0, 255, 0.8);
 }
 
 .movie-card img {
     width: 100%;
-    height: 300px;
-    border-radius: 10px;
+    height: 260px;
+    border-radius: 12px;
     object-fit: cover;
 }
 
 .movie-card h3 {
-    margin: 10px 0 5px;
-    font-size: 18px;
+    font-size: 15px;
+    margin-top: 10px;
     color: #ffcb05;
 }
 
 .movie-card p {
-    color: #ccc;
-    font-size: 15px;
+    color: #e0e0e0;
+    font-size: 13px;
+    margin-top: 6px;
 }
 
-/* 🎥 PÁGINA DE PELÍCULA */
+/* Botón eliminar */
+.delete-btn {
+    margin-top: 10px;
+    background: #ff3366;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 999px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: #ff557f;
+}
+
+/* ============================
+   📄 DETALLE DE PELÍCULA
+   ============================ */
 .movie-detail {
     max-width: 900px;
-    margin: 50px auto;
+    margin: 40px auto;
     text-align: center;
 }
 
 .movie-detail img {
     width: 350px;
     height: 520px;
-    border-radius: 15px;
     object-fit: cover;
+    border-radius: 18px;
 }
 
 .movie-detail h2 {
@@ -171,25 +203,188 @@ header h1 {
     line-height: 1.6;
 }
 
-/* 📄 PELÍCULAS RECOMENDADAS */
+/* ============================
+   📌 PAGINACIÓN
+   ============================ */
+.pagination {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.pagination a {
+    padding: 8px 16px;
+    background: transparent;
+    border: 2px solid #a24dff;
+    color: white;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.pagination a:hover {
+    background: #a24dff;
+}
+.auth-container textarea {
+    width: 85%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    background: #1b0030;
+    color: white;
+    font-size: 15px;
+    resize: vertical;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: rgba(21, 0, 40, 0.9);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.admin-table th {
+    background: rgba(132, 0, 255, 0.8);
+    color: #ffcb05;
+    font-weight: 600;
+}
+
+.admin-table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-links {
+    margin-top: 1rem;
+}
+
+.admin-links a {
+    color: #ffcb05;
+    text-decoration: none;
+    margin-right: 15px;
+}
+
+.admin-links a:hover {
+    text-decoration: underline;
+}
+
+/* ============================
+   🔝 HEADER DEL DASHBOARD
+   ============================ */
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 5px 25px 5px;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid rgba(132, 0, 255, 0.4);
+}
+
+.dash-header h1 {
+    font-size: 32px;
+    margin: 0;
+    background: linear-gradient(90deg, #ffffff, #c98cff, #b34cff);
+
+    /* Compatibilidad para evitar el warning */
+    background-clip: text;
+
+    /* Soporte real en navegadores */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    font-weight: 800;
+}
+
+
+.user-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 15px;
+}
+
+.logout-btn {
+    color: #ffcb05;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 6px 14px;
+    border: 2px solid #ffcb05;
+    border-radius: 999px;
+    transition: 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: #ffcb05;
+    color: #000;
+}
 .recommendations {
     margin-top: 40px;
+    text-align: center;
 }
 
 .recommendations h3 {
     color: #ffcb05;
     margin-bottom: 15px;
+    font-size: 24px;
 }
 
 .recommendation-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 20px;
 }
 
-.recommendation-grid img {
+.rec-card {
+    text-decoration: none;
+    background: rgba(132, 0, 255, 0.45);
+    padding: 10px;
+    border-radius: 12px;
+    transition: 0.25s ease;
+    color: white;
+}
+
+.rec-card:hover {
+    transform: scale(1.05);
+    background: rgba(180, 0, 255, 0.70);
+}
+
+.rec-card img {
     width: 100%;
-    height: 260px;
+    height: 240px;
     border-radius: 10px;
     object-fit: cover;
+}
+
+.rec-card p {
+    font-size: 14px;
+    margin-top: 8px;
+    color: #ffcb05;
+}
+
+.movie-genres {
+    margin: 10px 0 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.genre-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 203, 5, 0.12);
+    border: 1px solid #ffcb05;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #ffcb05;
 }

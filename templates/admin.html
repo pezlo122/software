@@ -1,18 +1,36 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Panel de Administración</h2>
-<table>
-  <tr>
-    <th>Usuario</th>
-    <th>Correo</th>
-  </tr>
-  {% for u in users %}
-  <tr>
-    <td>{{ u['username'] }}</td>
-    <td>{{ u['email'] }}</td>
-  </tr>
-  {% endfor %}
-</table>
-<p><a href="/movies">Volver a películas</a></p>
-<p><a href="/logout">Cerrar sesión</a></p>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de administración</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <h1>Panel de administración</h1>
+        <p>Listado de usuarios registrados en CineApp</p>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u['username'] }}</td>
+                    <td>{{ u['email'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p class="admin-links">
+            <a href="/dashboard">⬅ Volver al catálogo</a>
+            <a href="/logout">Cerrar sesión</a>
+        </p>
+    </div>
+</body>
+</html>

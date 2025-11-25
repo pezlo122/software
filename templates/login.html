@@ -2,31 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Iniciar Sesión - CineApp</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <div class="auth-container">
+        <h1>CineApp</h1>
+        <h2>Iniciar sesión</h2>
 
-<div class="auth-container">
-    <h1>MovieVerse</h1>
-    <h2>Iniciar Sesión</h2>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="{{ url_for('login') }}">
-        <input type="text" name="username" placeholder="Usuario o correo" required>
-        <input type="password" name="password" placeholder="Contraseña" required>
-        <button type="submit">Iniciar sesión</button>
-    </form>
-
-    <p>¿No tienes cuenta? <a href="{{ url_for('register') }}">Regístrate aquí</a></p>
+        {% if flash %}
+<div class="flash {{ flash.category }}">
+    {{ flash.message }}
 </div>
+{% endif %}
 
+        <form action="/login" method="post">
+            <input type="text" name="identifier" placeholder="Usuario o Email" required>
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Entrar</button>
+        </form>
+
+        <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+    </div>
 </body>
 </html>

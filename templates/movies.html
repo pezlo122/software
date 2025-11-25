@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="movies-container">
-  <h1>🎞️ Catálogo de Películas</h1>
+  <h1>Catálogo de Películas</h1>
 
   <!-- Filtros -->
   <form method="get" action="{{ url_for('movies') }}" class="filters">
@@ -10,7 +10,7 @@
     <button type="submit">Filtrar</button>
   </form>
 
-  <!-- Grilla de películas -->
+  <!-- Estructura de visualizacion de películas -->
   <div class="grid">
     {% for movie in movies %}
       <div class="card">
@@ -22,7 +22,7 @@
     {% endfor %}
   </div>
 
-  <!-- Paginación -->
+  <!-- Paginas -->
   <div class="pagination">
     {% if page > 1 %}
       <a href="{{ url_for('movies', page=page-1, search=search, genre=genre) }}">⬅️ Anterior</a>

@@ -3,49 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ movie.title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
 <header>
-    <a href="{{ url_for('dashboard') }}" class="back-button">⬅ Volver</a>
-    <h1>{{ movie.title }}</h1>
+    <h1>Detalle de la película</h1>
+    <a href="/dashboard" class="logout">⬅ Volver al Catálogo</a>
 </header>
 
-<section class="movie-detail">
-    <div class="movie-poster">
-        {% if movie.poster_path %}
-            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
-        {% else %}
-            <img src="{{ url_for('static', filename='no-image.png') }}" alt="Sin imagen">
-        {% endif %}
-    </div>
+<div class="movie-detail">
 
-    <div class="movie-info">
-        <h2>{{ movie.title }}</h2>
-        <p><strong>⭐ Calificación:</strong> {{ movie.vote_average }}</p>
-        <p><strong>Sinopsis:</strong> {{ movie.overview }}</p>
-    </div>
-</section>
+    <!-- Imagen principal -->
+    {% if movie.poster_path %}
+        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+    {% elif movie.poster %}
+        <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+    {% endif %}
 
-<section class="recommendations">
-    <h2>Recomendaciones similares</h2>
-    <div class="movie-grid">
-        {% for rec in recommendations %}
-            <div class="movie-card">
-                <a href="{{ url_for('movie', movie_id=rec.id) }}">
-                    {% if rec.poster_path %}
-                        <img src="https://image.tmdb.org/t/p/w500{{ rec.poster_path }}" alt="{{ rec.title }}">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='no-image.png') }}" alt="Sin imagen">
-                    {% endif %}
-                    <h3>{{ rec.title }}</h3>
-                    <p>⭐ {{ rec.vote_average }}</p>
-                </a>
-            </div>
+    <!-- Título -->
+    <h2>{{ movie.title }}</h2>
+
+    <!-- Géneros -->
+    {% if movie.genres %}
+    <div class="movie-genres">
+        {% for genre in movie.genres %}
+            <span class="genre-badge">{{ genre.name }}</span>
         {% endfor %}
     </div>
-</section>
+    {% endif %}
+
+    <!-- Descripción -->
+    {% if movie.overview %}
+        <p>{{ movie.overview }}</p>
+    {% else %}
+        <p>No hay descripción disponible para esta película.</p>
+    {% endif %}
+
+    <!-- Flash -->
+    {% if flash %}
+    <div class="flash {{ flash.category }}">
+        {{ flash.message }}
+    </div>
+    {% endif %}
+
+    <!-- =========================================================== -->
+    <!-- SECCIÓN DE PELÍCULAS RECOMENDADAS-->
+    <!-- =========================================================== -->
+    <div class="recommendations">
+        <h3>Películas Recomendadas</h3>
+
+        <div class="recommendation-grid">
+            {% for rec in recommendations %}
+            <a href="/movie/{{ rec.id }}" class="rec-card">
+                {% if rec.poster_path %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ rec.poster_path }}" alt="{{ rec.title }}">
+                {% else %}
+                    <img src="https://via.placeholder.com/300x450?text=No+Image" alt="{{ rec.title }}">
+                {% endif %}
+
+                <p>{{ rec.title }}</p>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
 
 </body>
 </html>
