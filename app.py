@@ -247,6 +247,8 @@ def movie_detail(request: Request, movie_id: int):
         }
     )
 
+
+
 # -----------------------------------------------------------------------------------
 # AGREGAR PELÍCULA PERSONALIZADA
 # -----------------------------------------------------------------------------------
@@ -336,11 +338,3 @@ def logout(request: Request):
     request.session.clear()
     set_flash(request, "Sesión cerrada correctamente.", "success")
     return RedirectResponse("/login", status_code=302)
-
-
-# -----------------------------------------------------------------------------------
-# ARRANQUE DEL SERVIDOR (para ejecutar python app.py directamente)
-# -----------------------------------------------------------------------------------
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
