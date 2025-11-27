@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from app import app, save_user
+from psoftware.app import app, save_user
 import os
 
 client = TestClient(app)

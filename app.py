@@ -274,9 +274,9 @@ def add_page(request: Request):
 @app.post("/add-movie")
 def add_custom_movie(
     request: Request,
-    title: str = Form(),
-    description: str = Form(),
-    poster: str = Form(None)
+    title: str = Form(default=""),         # Permite que title sea vacío
+    description: str = Form(default=""),   # Permite que description sea vacío
+    poster: str = Form(default=None)
 ):
     # Proteger ruta
     current_user = require_user(request)
@@ -288,8 +288,8 @@ def add_custom_movie(
 
     movies.append({
         "id": new_id,
-        "title": title,
-        "description": description,
+        "title": title or "Sin título",  # Opcional: texto por defecto si queda vacío
+        "description": description or "Sin descripción",
         "poster": poster or "https://via.placeholder.com/300x450?text=No+Image"
     })
 
@@ -297,6 +297,7 @@ def add_custom_movie(
 
     set_flash(request, "Película agregada correctamente.", "success")
     return RedirectResponse("/dashboard", status_code=302)
+
 
 
 # -----------------------------------------------------------------------------------

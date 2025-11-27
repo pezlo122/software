@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from app import app, save_custom_movies, save_user
+from psoftware.app import app, save_user, save_custom_movies, save_user
 import json, os
 
 client = TestClient(app)
