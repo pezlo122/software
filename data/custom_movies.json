@@ -1,16 +1,3 @@
 {
-    "movies": [
-        {
-            "id": 100001,
-            "title": "Película Test",
-            "description": "Descripción test",
-            "poster": "https://via.placeholder.com/300x450?text=No+Image"
-        },
-        {
-            "id": 100002,
-            "title": "Sin título",
-            "description": "Algo",
-            "poster": "https://via.placeholder.com/300x450?text=No+Image"
-        }
-    ]
+    "movies": []
 }
