@@ -1,73 +1,94 @@
 from fastapi import APIRouter, HTTPException
-import json
+from data_base import CustomMovieRepository, RatingRepository
+import requests
 import os
 
 router = APIRouter(prefix="/api")
 
-CUSTOM_MOVIES_FILE = os.path.join("data", "custom_movies.json")
+TMDB_API_KEY = "41d18781051e38c1a3a35fa10bfbc9b2"
+TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
-# -----------------------------
-# Helper functions
-# -----------------------------
-def load_custom_movies():
-    if not os.path.exists(CUSTOM_MOVIES_FILE):
-        return []
-    with open(CUSTOM_MOVIES_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return data.get("movies", [])
 
-def save_custom_movies(movies):
-    with open(CUSTOM_MOVIES_FILE, "w", encoding="utf-8") as f:
-        json.dump({"movies": movies}, f, indent=4, ensure_ascii=False)
-
-# -----------------------------
-# 📌 GET – listar todas las películas personalizadas
-# -----------------------------
+# ============================
+# GET ALL CUSTOM MOVIES
+# ============================
 @router.get("/movies")
 def get_movies():
-    return {"custom_movies": load_custom_movies()}
+    return {"movies": CustomMovieRepository.load_movies()}
 
-# -----------------------------
-# 📌 GET – obtener una película por ID
-# -----------------------------
+
+# ============================
+# GET MOVIE BY ID
+# ============================
 @router.get("/movie/{movie_id}")
 def get_movie(movie_id: int):
-    movies = load_custom_movies()
-    for m in movies:
-        if m["id"] == movie_id:
-            return m
-    raise HTTPException(status_code=404, detail="Película no encontrada")
+    movies = CustomMovieRepository.load_movies()
+    movie = next((m for m in movies if m["id"] == movie_id), None)
 
-# -----------------------------
-# 📌 POST – agregar película personalizada
-# -----------------------------
+    if movie is None:
+        raise HTTPException(status_code=404, detail="Movie not found")
+
+    return movie
+
+
+# ============================
+# ADD CUSTOM MOVIE
+# ============================
 @router.post("/movie/add")
 def add_movie(title: str, description: str, poster: str = None):
-    movies = load_custom_movies()
-    new_id = max([m["id"] for m in movies], default=100000) + 1
+    poster = poster or "https://via.placeholder.com/300x450?text=No+Image"
+    new_id = CustomMovieRepository.add_movie(title, description, poster)
 
-    new_movie = {
-        "id": new_id,
-        "title": title,
-        "description": description,
-        "poster": poster or "https://via.placeholder.com/300x450?text=No+Image"
-    }
+    return {"message": "created", "id": new_id}
 
-    movies.append(new_movie)
-    save_custom_movies(movies)
 
-    return {"message": "Película agregada correctamente", "movie": new_movie}
-
-# -----------------------------
-# 📌 DELETE – eliminar película personalizada
-# -----------------------------
+# ============================
+# DELETE CUSTOM MOVIE
+# ============================
 @router.delete("/movie/{movie_id}")
 def delete_movie(movie_id: int):
-    movies = load_custom_movies()
-    updated = [m for m in movies if m["id"] != movie_id]
+    ok = CustomMovieRepository.delete_movie(movie_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Movie not found")
 
-    if len(updated) == len(movies):
-        raise HTTPException(status_code=404, detail="Película no encontrada para eliminar")
+    return {"message": "deleted", "id": movie_id}
 
-    save_custom_movies(updated)
-    return {"message": "Película eliminada con éxito"}
+
+# ============================
+# LIKE / DISLIKE MOVIE
+# ============================
+@router.post("/movie/{movie_id}/rate")
+def rate_movie(movie_id: int, user: str, rating: int):
+    """
+    rating:
+      1  = like
+     -1  = dislike
+    """
+    if rating not in [-1, 1]:
+        raise HTTPException(status_code=400, detail="Invalid rating")
+
+    RatingRepository.rate_movie(user, movie_id, rating)
+
+    return {"message": "rating updated"}
+
+
+# ============================
+# GET TRAILER VIA TMDB
+# ============================
+@router.get("/movie/{movie_id}/trailer")
+def get_trailer(movie_id: int):
+    r = requests.get(
+        f"{TMDB_BASE_URL}/movie/{movie_id}/videos",
+        params={"api_key": TMDB_API_KEY, "language": "es-ES"}
+    ).json()
+
+    videos = r.get("results", [])
+    trailers = [v for v in videos if v["type"] == "Trailer" and v["site"] == "YouTube"]
+
+    if not trailers:
+        raise HTTPException(status_code=404, detail="Trailer not found")
+
+    youtube_key = trailers[0]["key"]
+    youtube_url = f"https://www.youtube.com/embed/{youtube_key}"
+
+    return {"trailer_url": youtube_url}

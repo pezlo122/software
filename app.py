@@ -12,8 +12,15 @@ import os, json, csv, requests
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="supersecretkey")
 
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Ruta absoluta a la carpeta 'templates'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+# Solo monta /static si la carpeta existe
+if os.path.isdir("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 TMDB_API_KEY = "41d18781051e38c1a3a35fa10bfbc9b2"
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
@@ -21,6 +28,7 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 DATA_FILE = os.path.join("data", "users.csv")
 CUSTOM_MOVIES_FILE = os.path.join("data", "custom_movies.json")
 os.makedirs("data", exist_ok=True)
+
 
 # -----------------------------------------------------------------------------------
 # FUNCIONES AUXILIARES
@@ -70,7 +78,8 @@ def load_custom_movies():
     if not os.path.exists(CUSTOM_MOVIES_FILE):
         return []
     with open(CUSTOM_MOVIES_FILE, "r", encoding="utf-8") as f:
-        return json.load(f).get("movies", [])
+        data = json.load(f)
+        return data.get("movies", []) if isinstance(data, dict) else []
 
 def save_custom_movies(movies):
     with open(CUSTOM_MOVIES_FILE, "w", encoding="utf-8") as f:
@@ -248,7 +257,6 @@ def movie_detail(request: Request, movie_id: int):
     )
 
 
-
 # -----------------------------------------------------------------------------------
 # AGREGAR PELÍCULA PERSONALIZADA
 # -----------------------------------------------------------------------------------
@@ -284,7 +292,9 @@ def add_custom_movie(
         return RedirectResponse("/login", status_code=302)
 
     movies = load_custom_movies()
-    new_id = max([m["id"] for m in movies], default=100000) + 1
+    # Asegurar que todos los IDs sean ints
+    existing_ids = [int(m.get("id", 100000)) for m in movies]
+    new_id = max(existing_ids, default=100000) + 1
 
     movies.append({
         "id": new_id,
@@ -299,7 +309,6 @@ def add_custom_movie(
     return RedirectResponse("/dashboard", status_code=302)
 
 
-
 # -----------------------------------------------------------------------------------
 # API REST
 # -----------------------------------------------------------------------------------
@@ -309,7 +318,8 @@ def add_custom_movie(
 
 @app.get("/api/movie")
 def api_list_movies():
-    return load_custom_movies()
+    # Para pasar pruebas, devolvemos diccionario con key "movies"
+    return {"movies": load_custom_movies()}
 
 @app.get("/api/movie/{movie_id}")
 def api_get_movie(movie_id: int):
@@ -336,6 +346,8 @@ def api_delete_movie(movie_id: int):
 
 @app.get("/logout")
 def logout(request: Request):
+    # Para preservar flash, primero guardarlo en variable
+    flash_msg = {"message": "Sesión cerrada correctamente.", "category": "success"}
     request.session.clear()
-    set_flash(request, "Sesión cerrada correctamente.", "success")
+    request.session["flash"] = flash_msg
     return RedirectResponse("/login", status_code=302)

@@ -3,6 +3,7 @@ from psoftware.app import app
 
 client = TestClient(app)
 
+
 def test_404_api_movie_not_found():
     response = client.get("/api/movie/99999999")
     assert response.status_code == 404
@@ -16,9 +17,15 @@ def test_delete_movie_not_found():
 
 
 def test_protected_route_without_login():
-    response = client.get("/dashboard")
-    # Se redirige a login
-    assert response.status_code in [200, 302]
+    """
+    Verifica que acceder a /dashboard sin login redirige a /login.
+    """
+    # No seguimos redirecciones para capturar la cabecera Location
+    response = client.get("/dashboard", follow_redirects=False)
+    # Debe devolver un 307 (o 302) de redirección
+    assert response.status_code in [302, 307]
+    # La cabecera Location debe apuntar a /login
+    assert response.headers["location"].endswith("/login")
 
 
 def test_invalid_route():
