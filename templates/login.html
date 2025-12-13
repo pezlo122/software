@@ -1,28 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="auth-container">
-        <h1>MovieVerse</h1>
-        <h2>Iniciar sesión</h2>
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
 
-        {% if flash %}
-<div class="flash {{ flash.category }}">
-    {{ flash.message }}
+{% block content %}
+<div class="page-wrapper auth-box">
+    <h2>Iniciar sesión</h2>
+
+    <form action="/login" method="post" class="auth-form">
+        <input type="text" name="identifier" placeholder="Usuario o Email" required>
+        <input type="password" name="password" placeholder="Contraseña" required>
+        <button type="submit" class="btn-primary">Entrar</button>
+    </form>
+
+    <p style="margin-top: 20px;">
+        ¿No tienes cuenta?
+        <a href="/register">Regístrate</a>
+    </p>
 </div>
-{% endif %}
-
-        <form action="/login" method="post">
-            <input type="text" name="identifier" placeholder="Usuario o Email" required>
-            <input type="password" name="password" placeholder="Contraseña" required>
-            <button type="submit">Entrar</button>
-        </form>
-
-        <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
-    </div>
-</body>
-</html>
+{% endblock %}

@@ -1,75 +1,61 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ movie.title }}</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
+{% extends "base.html" %}
+{% block title %}{{ movie.get('title') }}{% endblock %}
 
-<body>
-
-<header>
-    <h1>Detalle de la película</h1>
-    <a href="/dashboard" class="logout">⬅ Volver al Catálogo</a>
-</header>
+{% block content %}
 
 <div class="movie-detail">
 
-    <!-- Imagen principal -->
-    {% if movie.poster_path %}
-        <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
-    {% elif movie.poster %}
-        <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+    {% if movie.get('poster_path') %}
+        <img src="https://image.tmdb.org/t/p/w500{{ movie.get('poster_path') }}" alt="{{ movie.get('title') }}">
+    {% elif movie.get('poster') %}
+        <img src="{{ movie.get('poster') }}" alt="{{ movie.get('title') }}">
     {% endif %}
 
-    <!-- Título -->
-    <h2>{{ movie.title }}</h2>
+    <h2>{{ movie.get('title') }}</h2>
 
-    <!-- Géneros -->
-    {% if movie.genres %}
+    {% if movie.get('genres') %}
     <div class="movie-genres">
-        {% for genre in movie.genres %}
-            <span class="genre-badge">{{ genre.name }}</span>
+        {% for g in movie.get('genres') %}
+            <span class="genre-badge">{{ g.get('name') }}</span>
         {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Descripción -->
-    {% if movie.overview %}
-        <p>{{ movie.overview }}</p>
-    {% else %}
-        <p>No hay descripción disponible para esta película.</p>
-    {% endif %}
+    <p>{{ movie.get('overview') or 'Sin descripción' }}</p>
 
-    <!-- Flash -->
-    {% if flash %}
-    <div class="flash {{ flash.category }}">
-        {{ flash.message }}
+    <!-- ❤️ LIKE BUTTON -->
+    <form action="/api/like/{{ movie.get('id') }}" method="post" style="margin-top: 20px;">
+        <button class="like-btn">❤️ Me gusta</button>
+    </form>
+
+    <p style="margin-top:10px; font-size:18px;">
+        ❤️ <strong>{{ likes }}</strong> likes
+    </p>
+
+    {% if trailer_key %}
+    <div class="trailer-box">
+        <h3>Trailer Oficial</h3>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ trailer_key }}" frameborder="0" allowfullscreen></iframe>
     </div>
     {% endif %}
 
-    <!-- =========================================================== -->
-    <!-- SECCIÓN DE PELÍCULAS RECOMENDADAS-->
-    <!-- =========================================================== -->
     <div class="recommendations">
-        <h3>Películas Recomendadas</h3>
-
+        <h3>Recomendadas</h3>
         <div class="recommendation-grid">
             {% for rec in recommendations %}
-            <a href="/movie/{{ rec.id }}" class="rec-card">
-                {% if rec.poster_path %}
-                    <img src="https://image.tmdb.org/t/p/w500{{ rec.poster_path }}" alt="{{ rec.title }}">
+            <a href="/movie/{{ rec['id'] }}" class="rec-card">
+                {% if rec.get('poster_path') %}
+                <img src="https://image.tmdb.org/t/p/w300{{ rec.get('poster_path') }}" alt="{{ rec.get('title') }}">
                 {% else %}
-                    <img src="https://via.placeholder.com/300x450?text=No+Image" alt="{{ rec.title }}">
+                <img src="https://via.placeholder.com/300x450?text=No+Image" alt="{{ rec.get('title') }}">
                 {% endif %}
-
-                <p>{{ rec.title }}</p>
+                <p>{{ rec.get('title') }}</p>
             </a>
             {% endfor %}
         </div>
     </div>
 
+    <p style="margin-top: 30px;"><a href="/dashboard">⬅ Volver</a></p>
 </div>
 
-</body>
-</html>
+{% endblock %}

@@ -1,36 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Panel de administración</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="page-wrapper">
-        <h1>Panel de administración</h1>
-        <p>Listado de usuarios registrados en CineApp</p>
+{% extends "base.html" %}
+{% block title %}Panel Admin{% endblock %}
 
-        <table class="admin-table">
+{% block content %}
+
+<div class="page-wrapper">
+
+    <h1>Panel de Administración</h1>
+
+    <p>Bienvenido, {{ user }}.</p>
+
+    {% if flash %}
+    <div class="flash {{ flash.category }}">
+        {{ flash.message }}
+    </div>
+    {% endif %}
+
+    <h2>Likes por usuario</h2>
+
+    {% if likes_data %}
+        <table border="1" cellpadding="10">
             <thead>
                 <tr>
                     <th>Usuario</th>
-                    <th>Correo</th>
+                    <th>Película ID</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
-                {% for u in users %}
-                <tr>
-                    <td>{{ u['username'] }}</td>
-                    <td>{{ u['email'] }}</td>
-                </tr>
+                {% for u, movies in likes_data.items() %}
+                    {% for movie_id in movies %}
+                    <tr>
+                        <td>{{ u }}</td>
+                        <td>{{ movie_id }}</td>
+                        <td>
+                            <form action="{{ url_for('admin_delete_like', username=u, movie_id=movie_id) }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn-danger">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
+    {% else %}
+        <p>No hay likes registrados.</p>
+    {% endif %}
 
-        <p class="admin-links">
-            <a href="/dashboard">⬅ Volver al catálogo</a>
-            <a href="/logout">Cerrar sesión</a>
-        </p>
-    </div>
-</body>
-</html>
+</div>
+
+{% endblock %}

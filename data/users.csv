@@ -1,3 +1,5 @@
-username,email,password
-testuser,test@example.com,1234
-nicolas123,pezlo12@outlook.com,n1234
+username,email,password,likes
+nico,nico@mail.com,1234,[1,2,3]
+admin,admin@example.com,admin123,[0,0,0]
+
+

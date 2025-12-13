@@ -1,7 +1,7 @@
 /* ============================
    🌈 ESTILOS GENERALES
    ============================ */
-   * {
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -42,6 +42,18 @@ body {
     border: none;
     background: #1b0030;
     color: white;
+}
+
+.auth-container textarea {
+    width: 85%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+    background: #1b0030;
+    color: white;
+    font-size: 15px;
+    resize: vertical;
 }
 
 .auth-container button {
@@ -226,18 +238,10 @@ h1 {
 .pagination a:hover {
     background: #a24dff;
 }
-.auth-container textarea {
-    width: 85%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: none;
-    background: #1b0030;
-    color: white;
-    font-size: 15px;
-    resize: vertical;
-}
 
+/* ============================
+   📊 TABLAS DEL ADMIN
+   ============================ */
 .admin-table {
     width: 100%;
     border-collapse: collapse;
@@ -293,17 +297,11 @@ h1 {
     font-size: 32px;
     margin: 0;
     background: linear-gradient(90deg, #ffffff, #c98cff, #b34cff);
-
-    /* Compatibilidad para evitar el warning */
     background-clip: text;
-
-    /* Soporte real en navegadores */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-
     font-weight: 800;
 }
-
 
 .user-box {
     display: flex;
@@ -326,6 +324,10 @@ h1 {
     background: #ffcb05;
     color: #000;
 }
+
+/* ============================
+   ⭐ RECOMENDACIONES
+   ============================ */
 .recommendations {
     margin-top: 40px;
     text-align: center;
@@ -370,6 +372,7 @@ h1 {
     color: #ffcb05;
 }
 
+/* Géneros */
 .movie-genres {
     margin: 10px 0 15px;
     display: flex;
@@ -388,3 +391,69 @@ h1 {
     letter-spacing: 0.5px;
     color: #ffcb05;
 }
+/* ============================
+   🔝 HEADER GLOBAL (ESTILO MODERNO)
+   ============================ */
+.site-header {
+    width: 100%;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: rgba(132, 0, 255, 0.20);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(162, 77, 255, 0.45);
+
+    box-shadow: 0 0 15px rgba(132, 0, 255, 0.25);
+}
+
+.site-header h1 a {
+    font-size: 26px;
+    font-weight: 800;
+    text-decoration: none;
+
+    background: linear-gradient(90deg, #ffffff, #e3b3ff, #be63ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.site-header nav a {
+    margin-left: 18px;
+    text-decoration: none;
+    font-weight: 600;
+    color: #ffcb05;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 2px solid #ffcb05;
+    transition: 0.3s ease;
+}
+
+.site-header nav a:hover {
+    background: #ffcb05;
+    color: #000;
+}
+
+.user {
+    margin-right: 10px;
+    color: #fff;
+    font-weight: 600;
+}
+.like-btn {
+    padding: 10px 22px;
+    background: #f8f402;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    font-size: 16px;
+    transition: 0.25s ease;
+    box-shadow: 0 0 12px rgb(238, 255, 1);
+}
+
+.like-btn:hover {
+    background: #ffff00;
+    transform: scale(1.05);
+}
+

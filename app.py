@@ -12,41 +12,31 @@ import os, json, csv, requests
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="supersecretkey")
 
-# Ruta absoluta a la carpeta 'templates'
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
-
-# Solo monta /static si la carpeta existe
-if os.path.isdir("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 TMDB_API_KEY = "41d18781051e38c1a3a35fa10bfbc9b2"
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 DATA_FILE = os.path.join("data", "users.csv")
 CUSTOM_MOVIES_FILE = os.path.join("data", "custom_movies.json")
+LIKES_FILE = os.path.join("data", "likes.json")
 os.makedirs("data", exist_ok=True)
-
 
 # -----------------------------------------------------------------------------------
 # FUNCIONES AUXILIARES
 # -----------------------------------------------------------------------------------
+
 def set_flash(request: Request, message: str, category: str = "info"):
-    """Guarda un mensaje flash en la sesión."""
     request.session["flash"] = {"message": message, "category": category}
 
-
 def pop_flash(request: Request):
-    """Obtiene y elimina el mensaje flash de la sesión."""
     return request.session.pop("flash", None)
 
 def require_user(request: Request):
-    """Devuelve el usuario logueado o None si no hay sesión."""
     user = request.session.get("user")
     if not user:
-        set_flash(request, "Debes iniciar sesión para acceder a esta sección.", "error")
+        set_flash(request, "Debes iniciar sesión.", "error")
     return user
 
 def load_users():
@@ -78,15 +68,24 @@ def load_custom_movies():
     if not os.path.exists(CUSTOM_MOVIES_FILE):
         return []
     with open(CUSTOM_MOVIES_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        return data.get("movies", []) if isinstance(data, dict) else []
+        return json.load(f).get("movies", [])
 
 def save_custom_movies(movies):
     with open(CUSTOM_MOVIES_FILE, "w", encoding="utf-8") as f:
         json.dump({"movies": movies}, f, indent=4, ensure_ascii=False)
 
+def load_likes():
+    if not os.path.exists(LIKES_FILE):
+        return {}
+    with open(LIKES_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_likes(likes):
+    with open(LIKES_FILE, "w", encoding="utf-8") as f:
+        json.dump(likes, f, indent=4, ensure_ascii=False)
+
 # -----------------------------------------------------------------------------------
-# RUTAS PRINCIPALES (LOGIN / REGISTER)
+# LOGIN / REGISTER
 # -----------------------------------------------------------------------------------
 
 @app.get("/")
@@ -96,117 +95,82 @@ def root():
 @app.get("/login")
 def login_page(request: Request):
     flash = pop_flash(request)
-    return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "flash": flash}
-    )
+    return templates.TemplateResponse("login.html", {"request": request, "flash": flash, "user": request.session.get("user")})
 
 @app.post("/login")
-def login_action(
-    request: Request,
-    identifier: str = Form(),
-    password: str = Form()
-):
-    # Validación de credenciales
+def login_action(request: Request, identifier: str = Form(), password: str = Form()):
     if validate_login(identifier, password):
-        # Guardar usuario en sesión
         request.session["user"] = identifier
-
-        # Mensaje flash opcional de bienvenida
         set_flash(request, f"Bienvenido, {identifier}!", "success")
-
         return RedirectResponse("/dashboard", status_code=302)
-
-    # Si las credenciales NO son válidas
-    set_flash(request, "Credenciales inválidas. Intente nuevamente.", "error")
+    set_flash(request, "Credenciales inválidas.", "error")
     return RedirectResponse("/login", status_code=302)
-
 
 @app.get("/register")
 def register_page(request: Request):
     flash = pop_flash(request)
-    return templates.TemplateResponse(
-        "register.html",
-        {"request": request, "flash": flash}
-    )
+    return templates.TemplateResponse("register.html", {"request": request, "flash": flash, "user": request.session.get("user")})
 
 @app.post("/register")
-def register_action(
-    request: Request,
-    username: str = Form(),
-    email: str = Form(),
-    password: str = Form()
-):
+def register_action(request: Request, username: str = Form(), email: str = Form(), password: str = Form()):
     if user_exists(username, email):
-        set_flash(request, "El usuario o el correo ya están registrados.", "error")
+        set_flash(request, "Usuario o correo ya registrado.", "error")
         return RedirectResponse("/register", status_code=302)
-
     save_user(username, email, password)
-    set_flash(request, "Registro exitoso. Ahora puedes iniciar sesión.", "success")
+    set_flash(request, "Registro exitoso.", "success")
+    return RedirectResponse("/login", status_code=302)
+
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    set_flash(request, "Sesión cerrada.", "success")
     return RedirectResponse("/login", status_code=302)
 
 # -----------------------------------------------------------------------------------
-# DASHBOARD CON PAGINACIÓN
+# DASHBOARD CON TMDB Y CUSTOM MOVIES
 # -----------------------------------------------------------------------------------
 
 @app.get("/dashboard")
 def dashboard(request: Request, page: int = 1, query: str = ""):
-
-    # ==========================
-    # PROTEGER RUTA (requerido RNF4)
-    # ==========================
     current_user = require_user(request)
     if not current_user:
         return RedirectResponse("/login", status_code=302)
 
-    # ==========================
-    # MENSAJE FLASH (si existe)
-    # ==========================
     flash = pop_flash(request)
 
-    # Parámetros para TMDB
-    params = {
-        "api_key": TMDB_API_KEY,
-        "language": "es-ES",
-        "sort_by": "popularity.desc",
-        "page": page
-    }
-
-    # Buscar o descubrir películas
+    # TMDB
+    params = {"api_key": TMDB_API_KEY, "language": "es-ES", "sort_by": "popularity.desc", "page": page}
     if query:
         params["query"] = query
-        tmdb_movies = requests.get(
-            f"{TMDB_BASE_URL}/search/movie", params=params
-        ).json().get("results", [])
+        tmdb_movies = requests.get(f"{TMDB_BASE_URL}/search/movie", params=params).json().get("results", [])
     else:
-        tmdb_movies = requests.get(
-            f"{TMDB_BASE_URL}/discover/movie", params=params
-        ).json().get("results", [])
+        tmdb_movies = requests.get(f"{TMDB_BASE_URL}/discover/movie", params=params).json().get("results", [])
 
-    # Películas personalizadas
+    # Custom
     custom_movies = load_custom_movies()
+    all_movies = tmdb_movies + custom_movies
 
-    # Paginación segura
+    # Likes
+    likes_data = load_likes()
+    likes_map = {}
+    for m in all_movies:
+        likes_map[str(m["id"])] = sum(1 for u, ids in likes_data.items() if m["id"] in ids)
+
     prev_page = page - 1 if page > 1 else None
     next_page = page + 1
 
-    # ==========================
-    # RESPUESTA
-    # ==========================
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "movies_api": tmdb_movies,
-            "custom_movies": custom_movies,
-            "page": page,
-            "prev_page": prev_page,
-            "next_page": next_page,
-            "query": query,
-            "user": current_user,
-            "flash": flash,   # <<< indispensable para mensajes
-        }
-    )
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "movies_api": tmdb_movies,
+        "custom_movies": custom_movies,
+        "page": page,
+        "prev_page": prev_page,
+        "next_page": next_page,
+        "query": query,
+        "user": current_user,
+        "flash": flash,
+        "likes_map": likes_map
+    })
 
 # -----------------------------------------------------------------------------------
 # DETALLE DE PELÍCULA
@@ -214,48 +178,36 @@ def dashboard(request: Request, page: int = 1, query: str = ""):
 
 @app.get("/movie/{movie_id}")
 def movie_detail(request: Request, movie_id: int):
-    # ==========================
-    # PROTEGER RUTA
-    # ==========================
     current_user = require_user(request)
     if not current_user:
         return RedirectResponse("/login", status_code=302)
 
-    # ==========================
-    # MENSAJE FLASH (si existe)
-    # ==========================
     flash = pop_flash(request)
 
-    # ==========================
-    # CONSULTAR DETALLES DE LA PELÍCULA
-    # ==========================
-    movie = requests.get(
-        f"{TMDB_BASE_URL}/movie/{movie_id}",
-        params={"api_key": TMDB_API_KEY, "language": "es-ES"}
-    ).json()
+    movie = next((m for m in load_custom_movies() if m["id"] == movie_id), None)
+    trailer_key = None
+    if not movie:
+        resp = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}", params={"api_key": TMDB_API_KEY, "language": "es-ES"})
+        movie = resp.json()
+        # Trailer
+        trailer_resp = requests.get(f"{TMDB_BASE_URL}/movie/{movie_id}/videos", params={"api_key": TMDB_API_KEY, "language": "es-ES"})
+        videos = trailer_resp.json().get("results", [])
+        trailer = next((v for v in videos if v["site"]=="YouTube" and v["type"]=="Trailer"), None)
+        trailer_key = trailer["key"] if trailer else None
 
-    # ==========================
-    # CONSULTAR RECOMENDACIONES
-    # ==========================
-    recommendations = requests.get(
-        f"{TMDB_BASE_URL}/movie/{movie_id}/recommendations",
-        params={"api_key": TMDB_API_KEY, "language": "es-ES"}
-    ).json().get("results", [])
+    # Likes
+    likes_data = load_likes()
+    likes = sum(1 for ids in likes_data.values() if movie_id in ids)
 
-    # ==========================
-    # RETORNAR TEMPLATE
-    # ==========================
-    return templates.TemplateResponse(
-        "movie.html",
-        {
-            "request": request,
-            "movie": movie,
-            "recommendations": recommendations,
-            "user": current_user,
-            "flash": flash
-        }
-    )
-
+    return templates.TemplateResponse("movie.html", {
+        "request": request,
+        "movie": movie,
+        "recommendations": [],
+        "user": current_user,
+        "flash": flash,
+        "likes": likes,
+        "trailer_key": trailer_key
+    })
 
 # -----------------------------------------------------------------------------------
 # AGREGAR PELÍCULA PERSONALIZADA
@@ -263,91 +215,98 @@ def movie_detail(request: Request, movie_id: int):
 
 @app.get("/add-movie")
 def add_page(request: Request):
-    # Proteger ruta
     current_user = require_user(request)
     if not current_user:
         return RedirectResponse("/login", status_code=302)
-
     flash = pop_flash(request)
-
-    return templates.TemplateResponse(
-        "add_movie.html",
-        {
-            "request": request,
-            "flash": flash,
-            "user": current_user
-        }
-    )
+    return templates.TemplateResponse("add_movie.html", {"request": request, "flash": flash, "user": current_user})
 
 @app.post("/add-movie")
-def add_custom_movie(
-    request: Request,
-    title: str = Form(default=""),         # Permite que title sea vacío
-    description: str = Form(default=""),   # Permite que description sea vacío
-    poster: str = Form(default=None)
-):
-    # Proteger ruta
+def add_custom_movie(request: Request, title: str = Form(default=""), description: str = Form(default=""), poster: str = Form(default=None)):
     current_user = require_user(request)
     if not current_user:
         return RedirectResponse("/login", status_code=302)
 
     movies = load_custom_movies()
-    # Asegurar que todos los IDs sean ints
-    existing_ids = [int(m.get("id", 100000)) for m in movies]
-    new_id = max(existing_ids, default=100000) + 1
-
+    new_id = max([m["id"] for m in movies], default=100000) + 1
     movies.append({
         "id": new_id,
-        "title": title or "Sin título",  # Opcional: texto por defecto si queda vacío
+        "title": title or "Sin título",
         "description": description or "Sin descripción",
         "poster": poster or "https://via.placeholder.com/300x450?text=No+Image"
     })
-
     save_custom_movies(movies)
-
-    set_flash(request, "Película agregada correctamente.", "success")
+    set_flash(request, "Película agregada.", "success")
     return RedirectResponse("/dashboard", status_code=302)
 
-
 # -----------------------------------------------------------------------------------
-# API REST
-# -----------------------------------------------------------------------------------
-# Estos endpoints trabajan sobre las PELÍCULAS PERSONALIZADAS
-# que se guardan en data/custom_movies.json
+# LIKES
 # -----------------------------------------------------------------------------------
 
-@app.get("/api/movie")
-def api_list_movies():
-    # Para pasar pruebas, devolvemos diccionario con key "movies"
-    return {"movies": load_custom_movies()}
+@app.post("/api/like/{movie_id}")
+def like_movie(request: Request, movie_id: int):
+    user = require_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="No autorizado")
 
-@app.get("/api/movie/{movie_id}")
-def api_get_movie(movie_id: int):
-    movie = next((m for m in load_custom_movies() if m["id"] == movie_id), None)
-    if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
-    return movie
+    likes_data = load_likes()
+    user_likes = likes_data.get(user, [])
+    if movie_id not in user_likes:
+        user_likes.append(movie_id)
+    likes_data[user] = user_likes
+    save_likes(likes_data)
+    return {"status": "ok"}
 
-@app.delete("/api/movie/{movie_id}")
-def api_delete_movie(movie_id: int):
-    """
-    DELETE /api/movie/{id}
-    Elimina una película personalizada por id.
-    """
-    movies = load_custom_movies()
-    new_movies = [m for m in movies if m["id"] != movie_id]
+# -----------------------------------------------------------------------------------
+# ADMIN PANEL
+# -----------------------------------------------------------------------------------
 
-    # Si no cambió el tamaño, es que no existía
-    if len(new_movies) == len(movies):
-        raise HTTPException(status_code=404, detail="Movie not found")
+@app.get("/admin")
+def admin_panel(request: Request):
+    current_user = require_user(request)
+    if not current_user or current_user != "admin":
+        set_flash(request, "Acceso denegado.", "error")
+        return RedirectResponse("/login", status_code=302)
 
-    save_custom_movies(new_movies)
-    return {"status": "deleted", "id": movie_id}
+    flash = pop_flash(request)
+    likes_data = load_likes()
+    custom_movies = load_custom_movies()
 
-@app.get("/logout")
-def logout(request: Request):
-    # Para preservar flash, primero guardarlo en variable
-    flash_msg = {"message": "Sesión cerrada correctamente.", "category": "success"}
-    request.session.clear()
-    request.session["flash"] = flash_msg
-    return RedirectResponse("/login", status_code=302)
+    admin_likes_list = []
+    for user, movie_ids in likes_data.items():
+        for mid in movie_ids:
+            movie_info = next((m for m in custom_movies if m["id"]==mid), None)
+            if not movie_info:
+                resp = requests.get(f"{TMDB_BASE_URL}/movie/{mid}", params={"api_key": TMDB_API_KEY, "language": "es-ES"})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    movie_info = {"id": mid, "title": data.get("title", f"ID {mid}")}
+                else:
+                    movie_info = {"id": mid, "title": f"ID {mid}"}
+            admin_likes_list.append({"user": user, "movie_id": movie_info["id"], "title": movie_info["title"]})
+
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "user": current_user,
+        "flash": flash,
+        "likes_list": admin_likes_list
+    })
+
+@app.post("/admin/delete-like/{user}/{movie_id}")
+def admin_delete_like(request: Request, user: str, movie_id: int):
+    current_user = require_user(request)
+    if not current_user or current_user != "admin":
+        set_flash(request, "Acceso denegado.", "error")
+        return RedirectResponse("/login", status_code=302)
+
+    likes_data = load_likes()
+    user_likes = likes_data.get(user, [])
+    if movie_id in user_likes:
+        user_likes.remove(movie_id)
+        likes_data[user] = user_likes
+        save_likes(likes_data)
+        set_flash(request, f"Like eliminado para {user}.", "success")
+    else:
+        set_flash(request, "No se encontró el like.", "error")
+
+    return RedirectResponse("/admin", status_code=302)

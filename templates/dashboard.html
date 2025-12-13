@@ -1,119 +1,85 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Catálogo</title>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="page-wrapper">
+{% extends "base.html" %}
+{% block title %}Catálogo{% endblock %}
 
-        <h1>Catálogo de Películas</h1>
+{% block content %}
 
-          <div class="user-box">
-        <span>👤 {{ user if user is defined else 'Usuario' }}</span>
+<div class="page-wrapper">
+
+    <h1>Catálogo de Películas</h1>
+
+    <div class="user-box">
+        <span>👤 {{ user }}</span>
         <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
-</header>
 
-        <!-- Botón para agregar película personalizada -->
-        <a href="/add-movie" class="add-btn">➕ Agregar Película</a>
+    <!-- Buscador -->
+    <form action="/dashboard" method="get" class="search-form">
+        <input type="text" name="query" placeholder="Buscar en TMDB..." value="{{ query }}">
+        <button type="submit">Buscar</button>
+    </form>
 
-        <!-- Buscador de películas en TMDB -->
-        <form action="/dashboard" method="get" class="search-form">
-            <input
-                type="text"
-                name="query"
-                placeholder="Buscar en TMDB..."
-                value="{{ query }}"
-            >
-            <button type="submit">Buscar</button>
-        </form>
+    <h2>Películas Populares (TMDB)</h2>
 
-        <!-- Sección de películas personalizadas -->
-        <h2>Películas Personalizadas</h2>
-        {% if custom_movies and custom_movies|length > 0 %}
-        <div class="movie-grid">
-            {% for movie in custom_movies %}
-            <div class="movie-card">
-                <img src="{{ movie.poster }}" alt="{{ movie.title }}">
-                <h3>{{ movie.title }}</h3>
-                <p>{{ movie.description }}</p>
+    <div class="movie-grid">
+        {% for movie in movies_api %}
+        <div class="movie-card">
 
-                <!-- Botón que usa la API REST DELETE /api/movie/{id} -->
-                <button class="delete-btn" data-movie-id="{{ movie.id }}">
-                    🗑 Eliminar
-                </button>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p>No tienes películas personalizadas aún. Usa el botón "Agregar Película" para crear una.</p>
-        {% endif %}
-
-        <!-- Sección de películas obtenidas desde la API de TMDB -->
-        <h2>Películas Populares (TMDB)</h2>
-        <div class="movie-grid">
-            {% for movie in movies_api %}
-            <a href="/movie/{{ movie.id }}" class="movie-card">
-                <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
-                <h3>{{ movie.title }}</h3>
+            <!-- Imagen -->
+            <a href="/movie/{{ movie['id'] }}">
+                {% if movie['poster_path'] %}
+                <img src="https://image.tmdb.org/t/p/w300{{ movie['poster_path'] }}" alt="{{ movie['title'] }}">
+                {% else %}
+                <img src="https://via.placeholder.com/300x450?text=No+Image" alt="{{ movie['title'] }}">
+                {% endif %}
             </a>
-            {% endfor %}
-        </div>
 
-        <!-- Controles de paginación -->
-        <div class="pagination">
-            {% if prev_page %}
-                <a href="/dashboard?page={{ prev_page }}&query={{ query }}">⬅ Anterior</a>
-            {% endif %}
-            <span>Página {{ page }}</span>
-            {% if next_page %}
-                <a href="/dashboard?page={{ next_page }}&query={{ query }}">Siguiente ➡</a>
-            {% endif %}
-        </div>
+            <!-- Título -->
+            <h3>{{ movie['title'] }}</h3>
+            <p>⭐ {{ movie.get('vote_average', 'N/A') }}</p>
 
+            <!-- Like Button -->
+            <div class="like-box">
+                <button 
+                    class="like-btn" 
+                    data-movie="{{ movie['id'] }}">
+                    ❤️
+                </button>
+                <span class="like-count">{{ likes_map[movie['id']|string] if movie['id']|string in likes_map else 0 }}</span>
+            </div>
+
+        </div>
+        {% endfor %}
     </div>
 
-    <!-- Script para manejar clics en los botones de borrar y llamar a la API REST -->
-    <script>
-    document.addEventListener("click", function (event) {
-        const button = event.target.closest(".delete-btn");
-        if (!button) {
-            return;
-        }
+    <!-- Paginación -->
+    <div class="pagination">
+        {% if prev_page %}
+        <a href="/dashboard?page={{ prev_page }}&query={{ query }}">⬅ Anterior</a>
+        {% endif %}
+        
+        <span>Página {{ page }}</span>
 
-        const id = button.getAttribute("data-movie-id");
-        if (!id) {
-            console.error("No se encontró data-movie-id en el botón.");
-            return;
-        }
+        <a href="/dashboard?page={{ next_page }}&query={{ query }}">Siguiente ➡</a>
+    </div>
 
-        deleteMovie(id);
+</div>
+
+<!-- JS para likes -->
+<script>
+document.querySelectorAll(".like-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+        const movieId = btn.dataset.movie;
+        const countSpan = btn.nextElementSibling;
+
+        const res = await fetch(`/api/like/${movieId}`, {
+            method: "POST"
+        });
+
+        if (res.ok) {
+            countSpan.textContent = parseInt(countSpan.textContent) + 1;
+        }
     });
+});
+</script>
 
-    async function deleteMovie(id) {
-        if (!confirm("¿Seguro que deseas eliminar esta película?")) {
-            return;
-        }
-
-        try {
-            const response = await fetch("/api/movie/" + id, {
-                method: "DELETE"
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                alert("No se pudo eliminar la película. " + (data.detail || ""));
-                return;
-            }
-
-            window.location.reload();
-        } catch (error) {
-            console.error(error);
-            alert("Ocurrió un error al llamar a la API.");
-        }
-    }
-    </script>
-</body>
-</html>
+{% endblock %}
